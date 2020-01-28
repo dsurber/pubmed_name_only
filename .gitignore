@@ -1,0 +1,7 @@
+# Config file with api keys and tokens
+config.py
+
+query_table_test.csv
+
+# Debugging log
+*.log
