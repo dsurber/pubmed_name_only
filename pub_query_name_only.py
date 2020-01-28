@@ -73,10 +73,10 @@ pubs_frame = name_only_lib.summary(pmids, Entrez.api_key, config.grants)
 
 pubs_frame = pubs_frame.replace(',', ';', regex=True)
 pubs_frame = pubs_frame.apply(lambda x: x.str.slice(0, 30000))
-pubs_frame.to_csv('pmid_details_table.csv', index=False)
+pubs_frame.to_csv('./Reports/pmid_details_table.csv', index=False)
 
 #names_frame = pd.DataFrame(list(zip(names, count_list, pmid_list)),
 #                            columns = ['Name', 'Count', 'PMIDs'])
-names_table.to_csv('names_results_table.csv', index=False)
+names_table.to_csv('./Reports/names_results_table.csv', index=False)
 
-orcid_table.to_csv('orcid_results_table.csv', index=False)
+orcid_table.to_csv('./Reports/orcid_results_table.csv', index=False)
