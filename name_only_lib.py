@@ -286,6 +286,7 @@ def details(pub, variations):
     authors_initials = []
     authors_fnames = []
     authors_affil = []
+    authors_orcid = []
 
     # split into xml batches of author info
     author_list = re.split('<Author Valid', pub)
@@ -312,6 +313,11 @@ def details(pub, variations):
                                            author_list[x]).group(1))
         else:
             authors_affil.append('')
+        if re.search('Identifier Source="ORCID">', author_list[x]) is not None:
+            authors_orcid.append(re.search('Identifier Source="ORCID">(.*?)</Identifier>',
+                                            author_list[x]).group(1))
+        else:
+            authors_orcid.append('')
     # combine fname and lname to get full list of author names
     authors = [i+' '+j for i, j in zip(authors_fnames, authors_lnames)]
 
@@ -319,6 +325,7 @@ def details(pub, variations):
     authors_fnames = ', '.join(authors_fnames)
     authors_initials = ', '.join(authors_initials)
     authors_affil = ', '.join(authors_affil)
+    authors_orcid = ', '.join(authors_orcid)
     authors = ', '.join(authors)
 
 
@@ -352,15 +359,7 @@ def details(pub, variations):
                             publish_date).group(1)
         if re.search('[A-Za-z]', medline) is not None:
             year = re.search('^.*?([0-9]{4}).*?$', medline).group(1)
-            
-            if re.search('Summer', medline) is not None:
-                month = '06'
-            else:
-                try:
-                    month = re.search('^.*?([A-Za-z]{3}).*?[-|/].*$', medline).group(1)
-                except Exception as err:
-                    print(medline)
-                    month = '01'
+            month = re.search('^.*?([A-Za-z]{3}).*?[-|/].*$', medline).group(1)
             day = '01'
         else:
             year = re.search('^([0-9]{4}).*?$', medline).group(1)
@@ -404,91 +403,86 @@ def details(pub, variations):
     pubmed_tags = ', '.join(pubmed_tags)
 
     row = [pmid, pmcid, nihmsid,  nctid, pub_title, authors,
-            authors_lnames, authors_initials, authors_affil,
+            authors_lnames, authors_initials, authors_orcid, authors_affil,
             pub_date, journal_short, journal_full, pubmed_tags]
 
     return row
 
 
 def summary(pmids, ncbi_key, grants):
-	#***!!! developing !!!***
-	Entrez.email = "Your.Name.Here@example.org"
-	Entrez.api_key = ncbi_key
-	logger = logging.getLogger(__name__)
-	#***!!! dev variables... ***!!!
 
-	#pmids = '22339280,24860250,27801552,28570838,23544412,27239297,28760970,30368762,21451738'
-	#grants = variations
-	#Entrez.api_key = keys.ncbi_key
-	#logger = logging.getLogger(__name__)
-	#***!!!
+    #***!!! developing !!!***
+    Entrez.email = "Your.Name.Here@example.org"
+    Entrez.api_key = ncbi_key
+    logger = logging.getLogger(__name__)
+    try:
+            from urllib.error import HTTPError # for Python 3
+    except ImportError:
+            from urllib2 import HTTPError # for Python 2
 
-	try:
-			from urllib.error import HTTPError # for Python 3
-	except ImportError:
-			from urllib2 import HTTPError # for Python 2
+    count = len(pmids)
+    records = []
+    attempt = 0
 
-	count = len(pmids)
-	records = []
-	attempt = 0
+    while attempt < 3:
+        attempt += 1
+        logger.info('Going to Epost pmid list results')
+        try:
+            # query pubmed with pmids and post results with ePost
+            post_xml = Entrez.epost('pubmed', id=','.join(pmids))
+            # read results
+            search_results = Entrez.read(post_xml)
+            # close the link
+            post_xml.close()
+            attempt = 4
+        except HTTPError as err:
+            if 500 <= err.code <= 599:
+                logger.warning('Received error from server: %s' % err)
+                logger.warning('Attempt %i of 3' % attempt)
+                time.sleep(10)
+            else:
+                raise
 
-	while attempt < 3:
-		attempt += 1
-		logger.info('Going to Epost pmid list results')
-		try:
-			# query pubmed with pmids and post results with ePost
-			post_xml = Entrez.epost('pubmed', id=','.join(pmids))
-			# read results
-			search_results = Entrez.read(post_xml)
-			# close the link
-			post_xml.close()
-			attempt = 4
-		except HTTPError as err:
-			if 500 <= err.code <= 599:
-				logger.warning('Received error from server: %s' % err)
-				logger.warning('Attempt %i of 3' % attempt)
-				time.sleep(10)
-			else:
-				raise
+    # set paramater values from ePost location to get xml with eFetch
+    webenv = search_results['WebEnv']
+    query_key = search_results['QueryKey']
 
-	# set paramater values from ePost location to get xml with eFetch
-	webenv = search_results['WebEnv']
-	query_key = search_results['QueryKey']
+    batch_size = 500
 
-	batch_size = 500
+    for start in range(0, count, batch_size):
+        end = min(count, start+batch_size)
+        logger.info('Going to fetch record %i to %i' % (start+1, end))
+        attempt = 0
+        while attempt < 3:
+            attempt += 1
+            try:
+                # use eFetch to get xml information out of ePost results
+                fetch_handle = Entrez.efetch(db='pubmed',
+                                             retstart=start, retmax=batch_size,
+                                             webenv=webenv, query_key=query_key,
+                                             retmode='xml')
+                records.extend(fetch_handle.read())
+                fetch_handle.close
+                attempt = 4
+            except HTTPError as err:
+                if 500 <= err.code <= 599:
+                    logger.warning('Received error from server: %s' % err)
+                    logger.warning('Attempt %i of 3' % attempt)
+                    time.sleep(10)
+                else:
+                    raise
 
-	for start in range(0, count, batch_size):
-		end = min(count, start+batch_size)
-		logger.info('Going to fetch record %i to %i' % (start+1, end))
-		attempt = 0
-		while attempt < 3:
-			attempt += 1
-			try:
-				# use eFetch to get xml information out of ePost results
-				fetch_handle = Entrez.efetch(db='pubmed',
-				                             retstart=start, retmax=batch_size,
-				                             webenv=webenv, query_key=query_key,
-				                             retmode='xml')
-				records.extend(fetch_handle.read())
-				fetch_handle.close
-				attempt = 4
-			except HTTPError as err:
-				if 500 <= err.code <= 599:
-					logger.warning('Received error from server: %s' % err)
-					logger.warning('Attempt %i of 3' % attempt)
-					time.sleep(10)
-				else:
-					raise
+    pub_list = re.split('<PubmedArticle>', ''.join(records))
+    rows = []
+    for x in range(1, len(pub_list)):
+        # assemble list of publication details
+        rows.append(details(pub_list[x], grants))
 
-	pub_list = re.split('<PubmedArticle>', ''.join(records))
-	rows = []
-	for x in range(1, len(pub_list)):
-		# assemble list of publication details
-		rows.append(details(pub_list[x], grants))
 
-	pubs_frame = pd.DataFrame(rows, columns=[
-	                          'pmid', 'pmcid', 'nihmsid',  'nctid', 'pub_title',
-	                          'authors', 'authors_lnames', 'authors_initials',
-	                          'authors_affil', 'pub_date', 'journal_short',
-	                          'journal_full', 'pubmed_tags'])
-	return pubs_frame
+    pubs_frame = pd.DataFrame(rows, columns=[
+                              'pmid', 'pmcid', 'nihmsid',  'nctid', 'pub_title',
+                              'authors', 'authors_lnames', 'authors_initials',
+                              'orcid', 'authors_affil', 'pub_date', 'journal_short',
+                              'journal_full', 'pubmed_tags'])
+
+    return pubs_frame

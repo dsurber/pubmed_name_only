@@ -80,3 +80,5 @@ pubs_frame.to_csv('./Reports/pmid_details_table.csv', index=False)
 names_table.to_csv('./Reports/names_results_table.csv', index=False)
 
 orcid_table.to_csv('./Reports/orcid_results_table.csv', index=False)
+
+print('\nQuery complete and reports have been generated in "Reports" folder.')
