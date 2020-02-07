@@ -6,4 +6,4 @@ query_table_test.csv
 # Debugging log
 *.log
 
-./Reports/*
+/Reports/*
