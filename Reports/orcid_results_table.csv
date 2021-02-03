@@ -1,4 +1,1 @@
 index,lname,fname,mname,orcid,start,end,affiliation,term,pmids
-1,Bearden,Allison,,0000-0002-0560-3375,01/01/14,,Wisconsin,"(""0000-0002-0560-3375""[Identifier]) AND (""2014/01/01""[Date - Publication] : 3000[Date - Publication])",
-4,Stankowski-Drengler,Trista,,0000-0002-0236-9712,01/01/14,08/07/19,Wisconsin,"(""0000-0002-0236-9712""[Identifier]) AND (""2014/01/01""[Date - Publication] : 2019/08/07[Date - Publication])",
-5,hetzel,scott,h,0000-0002-0244-2959,01/01/14,08/07/19,Wisconsin,"(""0000-0002-0244-2959""[Identifier]) AND (""2014/01/01""[Date - Publication] : 2019/08/07[Date - Publication])",['28279986']
