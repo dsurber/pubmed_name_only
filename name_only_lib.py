@@ -50,13 +50,13 @@ def validate_config(ncbi_api, grants):
 
 	#run each grant in the list through the module to check the grant format
 	checks = list(map(check_grant_format, grants))
-	
+
 	#add error message for unexpected format found in grants
 	if "error" in checks:
 		error_messages.append('1 or more grants are in an unrecognized format.  Query will continue but table showing publications linked to grants may return unexpected results or code failure.  Check "config.py" to correct the value and format.')
 
 	checked = remove_bad_format(grants, checks, 'config.py')
-	
+
 	if len(checked[1]) > 0:
 		error_messages.append(checked[1])
 		grants = checked[0]
@@ -92,7 +92,7 @@ def validate_query_table(table):
 	error_messages = []
 	orcid_checks = table.apply(lambda x:check_orcid_format(x['orcid']), axis = 1)
 	orcid_checked = remove_bad_format(table['orcid'], orcid_checks, 'config.py')
-	
+
 	if len(orcid_checked[1]) > 0:
 		error_messages.append(orcid_checked[1])
 		table['orcid'] = orcid_checked[0]
@@ -140,7 +140,7 @@ def name_variations(lname, fname, mname):
 	# all combinations of last name variations with first initial variations
 	author_str = [x+' '+y[0] for x in lnames for y in fnames]
 
-	# if middle name was listed, add all combinations for lastname with first and middle 
+	# if middle name was listed, add all combinations for lastname with first and middle
 	# initial variations as well as last names with just middle initial variations
 	if len(mnames) > 0:
 	    author_str.extend([x+' '+y[0]+z[0] for x in lnames for y in fnames for z in mnames])
@@ -183,7 +183,7 @@ def name_query_term(auth_name, start, end, affiliation):
 
 	# format start, end, and affiliation for pubmed query
 	start = str(datetime.strptime(start, "%m/%d/%y").strftime("%Y/%m/%d"))
-	if end == '': 
+	if end == '':
 	    end = '3000'
 	else:
 	    end = str(datetime.strptime(end, "%m/%d/%y").strftime("%Y/%m/%d"))
@@ -209,7 +209,7 @@ def orcid_query_term(orcid, start, end):
 
 	# format start, end, and affiliation for pubmed query
 	start = str(datetime.strptime(start, "%m/%d/%y").strftime("%Y/%m/%d"))
-	if end == '': 
+	if end == '':
 	    end = '3000'
 	else:
 	    end = str(datetime.strptime(end, "%m/%d/%y").strftime("%Y/%m/%d"))
@@ -219,7 +219,7 @@ def orcid_query_term(orcid, start, end):
 
 	#query_frame = pd.DataFrame({'author': author_str, 'start': start, 'end': end, 'affiliation': affiliation, 'term':term},
 	#					columns = ['author', 'index', 'start', 'end', 'affiliation', 'term'])
-	return term	
+	return term
 
 
 def get_pmids(term):
@@ -227,12 +227,12 @@ def get_pmids(term):
 	attempt = 0
 	while attempt <= 3:
 	    try:
-	        handle = Entrez.esearch(db='pubmed', 
+	        handle = Entrez.esearch(db='pubmed',
 	                                #term='"'+name+'"',
 	                                term=term,
-	                                #field='author', #or 'orcid', #or'identifier' 
+	                                #field='author', #or 'orcid', #or'identifier'
 	                                retmax=5000,
-	                                usehistory='y', 
+	                                usehistory='y',
 	                                retmode='xml')
 	        record = Entrez.read(handle)
 	        handle.close()
@@ -249,10 +249,11 @@ def get_pmids(term):
 	        time.sleep(2)
 #	logger.debug('Name %s queried.' % str(term))
 
-	## Add code to write out a .csv table of terms ?even pass in author value? with resulting pmids 
+	## Add code to write out a .csv table of terms ?even pass in author value? with resulting pmids
 	return pmids
 
 
+## Details function
 def details(pub, variations):
     # remove all white space and \n to help regex function
     pub = ''.join(pub.split('\n'))
@@ -402,13 +403,20 @@ def details(pub, variations):
 
     pubmed_tags = ', '.join(pubmed_tags)
 
+    ## get doi information
+    if re.search('<ELocationID EIdType="doi" ValidYN="Y">(.*?)</ELocationID>', pub) is not None:
+        doi= re.search('<ELocationID EIdType="doi" ValidYN="Y">(.*?)</ELocationID>', pub).group(1)
+    else:
+        doi = 'Unknown'
+
     row = [pmid, pmcid, nihmsid,  nctid, pub_title, authors,
             authors_lnames, authors_initials, authors_orcid, authors_affil,
-            pub_date, journal_short, journal_full, pubmed_tags]
+            pub_date, journal_short, journal_full, pubmed_tags, doi]
 
     return row
 
 
+## Summary function
 def summary(pmids, ncbi_key, grants):
 
     #***!!! developing !!!***
@@ -461,7 +469,7 @@ def summary(pmids, ncbi_key, grants):
                                              retstart=start, retmax=batch_size,
                                              webenv=webenv, query_key=query_key,
                                              retmode='xml')
-                records.extend(fetch_handle.read())
+                records.extend(str(fetch_handle.read()))
                 fetch_handle.close
                 attempt = 4
             except HTTPError as err:
@@ -483,6 +491,6 @@ def summary(pmids, ncbi_key, grants):
                               'pmid', 'pmcid', 'nihmsid',  'nctid', 'pub_title',
                               'authors', 'authors_lnames', 'authors_initials',
                               'orcid', 'authors_affil', 'pub_date', 'journal_short',
-                              'journal_full', 'pubmed_tags'])
+                              'journal_full', 'pubmed_tags', 'doi'])
 
     return pubs_frame
