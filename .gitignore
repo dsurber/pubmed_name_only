@@ -7,3 +7,4 @@ config.py
 *.log
 
 /Reports/*
+config.py
