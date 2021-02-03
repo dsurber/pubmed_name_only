@@ -1,5 +1,5 @@
-# NCBI API Key 
-ncbi_api = ""
+# NCBI API Key
+ncbi_api = "66b67c02832e95b3d85135ead126e8f50808"
 
 # Grants
 grants = ["U54TR000021", "UL1RR025011", "KL2RR025012", "TL1RR025013",
