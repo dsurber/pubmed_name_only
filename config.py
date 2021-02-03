@@ -1,9 +1,0 @@
-# NCBI API Key
-ncbi_api = ""
-
-# Grants
-grants = ["U54TR000021", "UL1RR025011", "KL2RR025012", "TL1RR025013",
-			"UL1TR000427", "TL1TR000429", "KL2TR000428",
-			"UL1TR002373", "KL2TR002374", "TL1TR002375"]
-
-#grants = [""]
