@@ -1,6 +1,8 @@
 # Config file with api keys and tokens
 config.py
 
+algo_config.py
+
 *.csv
 
 # Debugging log
@@ -8,3 +10,5 @@ config.py
 
 /Reports/*
 config.py
+
+*.ipynb
