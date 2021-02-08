@@ -370,13 +370,41 @@ def details(pub, variations):
     # remove all whitespace from 'month'
     month = ''.join(month.split())
 
-    # combine month day and year
+        # combine month day and year
     pub_date = year+ '-' + month + '-' + day
+
     # check if month is letters and change into numerical date type
     if re.search('[a-zA-Z]', pub_date) is not None:
-        pub_date = datetime.strptime(pub_date,
-                                              "%Y-%b-%d").strftime("%Y-%m-%d")
+        pub_date = datetime.strptime(pub_date, "%Y-%b-%d").strftime("%Y-%m-%d")
 
+
+    ## get electronic publish date
+    if re.search('<ArticleDate DateType="Electronic">(.*?)</ArticleDate>', pub) is not None:
+        epub_date = re.search('<ArticleDate DateType="Electronic">(.*?)</ArticleDate>',
+                                 pub).group(1)
+    else:
+        epub_date = ''
+
+    if re.search('<Year>[0-9]{4}', epub_date) is None:
+        e_year = '2099'
+    else:
+        e_year = re.search('<Year>([0-9]{4})</Year>', epub_date).group(1)
+    if re.search('<Month>', epub_date) is None:
+        e_month = '01'
+    elif re.search('<Month>([A-Za-z].*?)-.*</Month>', epub_date) is not None:
+        e_month = re.search('<Month>([A-Za-z].*?)-.*</Month>', epub_date).group(1)
+    else:
+        e_month = re.search('<Month>(.*)</Month>', epub_date).group(1)
+    if re.search('<Day>', epub_date) is None:
+        e_day = '01'
+    else:
+        e_day = re.search('<Day>(.*)</Day>', epub_date).group(1)
+
+    # combine emonth eday and eyear
+    epub_date = e_year+ '-' + e_month + '-' + e_day
+
+
+    ## get journal issue
     if re.search('</JournalIssue>.*?<ISOAbbreviation>(.*?)</ISOAbbre',
                               pub) is not None:
         journal_short = re.search('</JournalIssue>.*?<ISOAbbreviation>(.*?)</ISOAbbre',
@@ -455,7 +483,7 @@ def details(pub, variations):
     ## assemble all values for the row of the dataframe to be returned
     row = [pmid, pmcid, nihmsid,  nctid, pub_title, authors,
             authors_lnames, authors_initials, authors_orcid, authors_affil,
-            pub_date, journal_short, journal_full, pubmed_tags, pub_type_list,
+            pub_date, epub_date, journal_short, journal_full, pubmed_tags, pub_type_list,
             exclude, mesh_major, mesh_minor, mesh_key, doi]
 
     return row
@@ -534,7 +562,7 @@ def summary(pmids, ncbi_key, grants):
 
     pubs_frame = pd.DataFrame(rows, columns=['pmid', 'pmcid', 'nihmsid',  'nctid', 'pub_title', 'authors',
             'authors_lnames', 'authors_initials', 'authors_orcid', 'authors_affil',
-            'pub_date', 'journal_short', 'journal_full', 'pubmed_tags', 'pub_type_list',
+            'pub_date', 'epub_date', 'journal_short', 'journal_full', 'pubmed_tags', 'pub_type_list',
             'exclude', 'mesh_major', 'mesh_minor', 'mesh_key', 'doi'])
 
     return pubs_frame
