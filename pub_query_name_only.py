@@ -78,6 +78,12 @@ else:
 # make dataframe of publications
 pubs_frame = name_only_lib.summary(pmids, Entrez.api_key, config.grants)
 
+## add a column of name variations for each pmid to the end of pubs_frame
+all_variations = []
+for pmid in pubs_frame.pmid:
+    all_variations.append(names_table.name_variation[names_table['pmids'].astype(str).str.contains(pmid)].tolist())
+pubs_frame['name_variations'] = all_variations
+
 ## clean up and output the csv tables
 pubs_frame = pubs_frame.replace(',', ';', regex=True)
 pubs_frame = pubs_frame.apply(lambda x: x.str.slice(0, 30000))
