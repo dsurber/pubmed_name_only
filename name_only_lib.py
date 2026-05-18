@@ -78,7 +78,7 @@ def check_orcid_format(orcid):
 def check_date_format(date_text):
     date_text = str(date_text)
     try:
-        datetime.strptime(date_text, '%m/%d/%y')
+        datetime.strptime(date_text, '%m/%d/%Y')
         return 'pass'
     except ValueError:
         if date_text == 'nan':
@@ -182,11 +182,11 @@ def name_query_term(auth_name, start, end, affiliation):
 	end = str(end)
 
 	# format start, end, and affiliation for pubmed query
-	start = str(datetime.strptime(start, "%m/%d/%y").strftime("%Y/%m/%d"))
+	start = str(datetime.strptime(start, "%m/%d/%Y").strftime("%Y/%m/%d"))
 	if end == '':
 	    end = '3000'
 	else:
-	    end = str(datetime.strptime(end, "%m/%d/%y").strftime("%Y/%m/%d"))
+	    end = str(datetime.strptime(end, "%m/%d/%Y").strftime("%Y/%m/%d"))
 
 	## create list of pubmed query terms using new author_str list
 	if affiliation == '':
@@ -208,11 +208,11 @@ def orcid_query_term(orcid, start, end):
 	end = str(end)
 
 	# format start, end, and affiliation for pubmed query
-	start = str(datetime.strptime(start, "%m/%d/%y").strftime("%Y/%m/%d"))
+	start = str(datetime.strptime(start, "%m/%d/%Y").strftime("%Y/%m/%d"))
 	if end == '':
 	    end = '3000'
 	else:
-	    end = str(datetime.strptime(end, "%m/%d/%y").strftime("%Y/%m/%d"))
+	    end = str(datetime.strptime(end, "%m/%d/%Y").strftime("%Y/%m/%d"))
 
 	## create list of pubmed query terms using new author_str list
 	term = '("'+orcid+'"[Identifier]) AND ("'+start+'"[Date - Publication] : '+end+'[Date - Publication])'
