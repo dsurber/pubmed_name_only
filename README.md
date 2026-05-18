@@ -77,10 +77,15 @@ orcid_results_table.csv	ORCID-based query results (if applicable)
 🛠 Project Structure
 .
 ├── pub_query_name_only.py   # Main execution script
+
 ├── name_only_lib.py         # Core logic and utilities
+
 ├── config.py                # Configuration settings
+
 ├── query_table.csv          # Input data
+
 ├── Reports/                 # Output files
+
 └── README.md
 
 
